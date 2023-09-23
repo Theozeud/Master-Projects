@@ -1,20 +1,38 @@
-include("main.jl")
+include("discretization.jl")
+include("fourier.jl")
+include("plot.jl")
 
 # Not forgot to declare it as constants
+# Parameters for simulation
 L = 1
-Nₓ = 300
-N = 10
-Nplot = 100
-X = range(-L/2,L/2,Nplot)
+Nₓ = 100
+Δx = L/Nₓ
+T = 10
+Nₜ = 10
+Δt = T/Nₜ
+N = 50
 
+# Discretisation
+X = uniformDiscretization(-L/2,L/2,Nₓ)
+
+# Somes functions for testing the code
 f₁(x::Real,::Real) = cos(2π*x/L)
-f₂(x::Real,::Real) = exp(f₁(x,L))
+f₂(x::Real,t::Real) = exp(f₁(x,t))
+∂f₁(x::Real,::Real) = -2π/L * sin(2π*x/L)
+∂f₂(x::Real,t::Real) = ∂f₁(x,t) * exp(f₁(x,t))
+∂∂f₁(x::Real,::Real) = -(2π/L)^2 * cos(2π*x/L)
+∂∂f₂(x::Real,t::Real) = (∂∂f₁(x,t) + ∂f₁(x,t) )* exp(f₁(x,t))
 
-f̃₁= computeApprox(f₁,L,Nₓ,N)
+# Test for the computation of the approximation
+f̃₁= computeApprox(f₁,X,N)
+@time plotψ(f₁,f̃₁,X)
 
-plotψ(f̃₁,f₁,X)
+f̃₂= computeApprox(f₂,X,N)
+plotψ(f₂,f̃₂,X)
 
-f̃₂= computeApprox(f₂,L,Nₓ,N)
-plotψ(f̃₂,f₂,X)
+# Test for the computation of the approximation of the derivative
+∂f̃₁= computeApprox∂(2,f₁,X,N)
+plotψ(∂∂f₁,∂f̃₁,X)
 
-# the rate between N and Nₓ must be enough small, i.e Nₓ>>N to have a good result
+∂f̃₂= computeApprox∂(2,f₂,X,N)
+plotψ(∂∂f₂,∂f̃₂,X)
